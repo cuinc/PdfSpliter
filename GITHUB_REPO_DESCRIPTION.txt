@@ -1,0 +1,3 @@
+🔄 PDF Chapter Splitter - Intelligent tool to automatically split PDF documents into separate chapter files using bookmarks, font detection, or keywords. Features GUI & CLI interfaces.
+
+Topics: pdf, python, document-processing, chapter-splitting, pdf-tools, automation, gui, cli, academic-tools, ebook-processing
