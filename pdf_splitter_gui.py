@@ -28,6 +28,7 @@ class PDFSplitterGUI:
         self.font_size = tk.DoubleVar(value=14.0)
         self.keywords = tk.StringVar(value="第,章,Chapter")
         self.page_ranges = tk.StringVar()
+        self.bookmark_level = tk.IntVar(value=1)
         
         self.setup_ui()
         
@@ -68,7 +69,10 @@ class PDFSplitterGUI:
         # 书签方法
         ttk.Radiobutton(method_frame, text="基于书签", variable=self.method, 
                        value="bookmarks").grid(row=0, column=0, sticky=tk.W, pady=2)
-        ttk.Label(method_frame, text="使用PDF内置书签自动切分章节").grid(row=0, column=1, sticky=tk.W, padx=(10, 0))
+        bookmark_frame = ttk.Frame(method_frame)
+        bookmark_frame.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 0))
+        ttk.Label(bookmark_frame, text="使用PDF内置书签自动切分章节，书签级别:").pack(side=tk.LEFT)
+        ttk.Spinbox(bookmark_frame, from_=1, to=5, width=5, textvariable=self.bookmark_level).pack(side=tk.LEFT, padx=(5, 0))
         
         # 字体方法
         ttk.Radiobutton(method_frame, text="基于字体大小", variable=self.method, 
@@ -164,14 +168,20 @@ class PDFSplitterGUI:
                 self.log(f"标题: {info['title']}")
                 self.log(f"作者: {info['author']}")
                 self.log(f"主题: {info['subject']}")
-                self.log(f"书签数量: {info['bookmarks_count']}")
                 
-                if info['bookmarks']:
-                    self.log("书签列表:")
-                    for bookmark in info['bookmarks']:
+                # 获取当前配置级别的书签
+                current_level_bookmarks = splitter.get_bookmarks(self.bookmark_level.get())
+                self.log(f"书签数量(全部): {info['bookmarks_count']}")
+                self.log(f"书签数量(第{self.bookmark_level.get()}级): {len(current_level_bookmarks)}")
+                
+                if current_level_bookmarks:
+                    self.log(f"第{self.bookmark_level.get()}级书签列表:")
+                    for bookmark in current_level_bookmarks[:10]:  # 只显示前10个
                         self.log(f"  - {bookmark['title']} (第{bookmark['page']+1}页)")
+                    if len(current_level_bookmarks) > 10:
+                        self.log(f"  ... 还有{len(current_level_bookmarks)-10}个书签")
                 else:
-                    self.log("未找到书签")
+                    self.log(f"未找到第{self.bookmark_level.get()}级书签")
                 
                 self.log("=" * 30)
                 
@@ -206,7 +216,7 @@ class PDFSplitterGUI:
                 output_dir = self.output_dir.get() if self.output_dir.get() else None
                 
                 if method == "bookmarks":
-                    files = splitter.split_by_bookmarks(output_dir)
+                    files = splitter.split_by_bookmarks(output_dir, self.bookmark_level.get())
                 elif method == "font":
                     files = splitter.split_by_auto_detection(
                         'font', output_dir, min_font_size=self.font_size.get()

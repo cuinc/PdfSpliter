@@ -6,7 +6,7 @@
 
 ## 功能特点
 
-- 🔖 **基于书签切分**: 使用PDF内置书签自动识别章节
+- 🔖 **基于书签切分**: 使用PDF内置书签自动识别章节，支持配置书签级别
 - 🔤 **基于字体切分**: 根据字体大小和样式检测章节标题
 - 🔍 **基于关键词切分**: 通过自定义关键词匹配章节
 - 📄 **手动页码切分**: 手动指定页码范围进行切分
@@ -41,7 +41,7 @@ python pdf_splitter_gui.py
 1. 点击"浏览"选择要切分的PDF文件
 2. 选择输出目录（可选，默认为原文件名_chapters）
 3. 选择切分方法：
-   - **基于书签**: 适用于有完整书签结构的PDF
+   - **基于书签**: 适用于有完整书签结构的PDF，可配置书签级别（1-5级）
    - **基于字体大小**: 通过字体大小检测标题
    - **基于关键词**: 通过关键词匹配章节标题
    - **手动指定页码**: 精确控制切分范围
@@ -58,6 +58,9 @@ python pdf_splitter.py example.pdf
 
 # 指定输出目录
 python pdf_splitter.py example.pdf -o output_folder
+
+# 使用指定级别的书签切分（默认为1级）
+python pdf_splitter.py example.pdf -m bookmarks --bookmark-level 2
 
 # 查看PDF信息
 python pdf_splitter.py example.pdf --info
@@ -80,6 +83,7 @@ python pdf_splitter.py example.pdf -m pages --pages 1-10,11-25,26-40
 
 - `-m, --method`: 切分方法 (bookmarks/font/keywords/pages)
 - `-o, --output`: 输出目录
+- `--bookmark-level`: 书签级别（默认为1，用于bookmarks方法）
 - `--font-size`: 最小字体大小阈值（用于font方法）
 - `--keywords`: 章节关键词列表（用于keywords方法）
 - `--pages`: 页码范围（用于pages方法）
@@ -93,8 +97,11 @@ python pdf_splitter.py example.pdf -m pages --pages 1-10,11-25,26-40
 # 查看论文结构
 python pdf_splitter.py research_paper.pdf --info
 
-# 基于书签切分
+# 基于书签切分（使用1级书签）
 python pdf_splitter.py research_paper.pdf -m bookmarks -o paper_chapters
+
+# 使用2级书签进行更细致的切分
+python pdf_splitter.py research_paper.pdf -m bookmarks --bookmark-level 2 -o paper_sections
 ```
 
 ### 示例2：教材切分
@@ -132,9 +139,13 @@ with PDFSplitter('example.pdf') as splitter:
     print(f"总页数: {info['total_pages']}")
     print(f"书签数: {info['bookmarks_count']}")
     
-    # 基于书签切分
+    # 基于书签切分（默认使用1级书签）
     files = splitter.split_by_bookmarks()
     print(f"生成了 {len(files)} 个文件")
+    
+    # 使用指定级别的书签切分
+    files = splitter.split_by_bookmarks(bookmark_level=2)
+    print(f"使用2级书签生成了 {len(files)} 个文件")
     
     # 基于字体切分
     files = splitter.split_by_auto_detection('font', min_font_size=14)
@@ -167,7 +178,10 @@ with PDFSplitter('example.pdf') as splitter:
 ### 常见问题
 
 **Q: 提示"未找到书签"**
-A: PDF文件没有书签结构，请尝试其他切分方法
+A: PDF文件没有书签结构或指定级别没有书签，请：
+- 在GUI中尝试不同的书签级别（1-5级）
+- 使用命令行参数 `--bookmark-level` 尝试其他级别
+- 尝试其他切分方法（字体、关键词等）
 
 **Q: 字体方法检测不到章节**
 A: 尝试调整字体大小阈值，或检查PDF是否为扫描版

@@ -10,7 +10,7 @@ A powerful and intelligent PDF chapter splitting tool that automatically divides
 
 ## ✨ Features
 
-- 🔖 **Bookmark-based Splitting**: Uses PDF's built-in bookmarks for precise chapter detection
+- 🔖 **Bookmark-based Splitting**: Uses PDF's built-in bookmarks for precise chapter detection with configurable bookmark levels
 - 🔤 **Font-size Detection**: Identifies chapter titles by analyzing font sizes and styles
 - 🔍 **Keyword Matching**: Finds chapters using customizable keywords and patterns
 - 📄 **Manual Page Ranges**: Specify exact page ranges for precise control
@@ -55,6 +55,9 @@ python pdf_splitter_gui.py
 # Split using bookmarks (most accurate)
 python pdf_splitter.py document.pdf -m bookmarks -o output_folder
 
+# Split using specific bookmark level (default is level 1)
+python pdf_splitter.py document.pdf -m bookmarks --bookmark-level 2 -o output_folder
+
 # Split using font size detection
 python pdf_splitter.py document.pdf -m font --font-size 16 -o chapters
 
@@ -72,7 +75,11 @@ python pdf_splitter.py document.pdf -m pages --pages 1-10,11-25,26-40 -o manual_
 #### 1. Bookmark-based Splitting (Recommended)
 Best for PDFs with proper bookmark structure:
 ```bash
+# Use level 1 bookmarks (default)
 python pdf_splitter.py textbook.pdf -m bookmarks
+
+# Use level 2 bookmarks for more detailed splitting
+python pdf_splitter.py textbook.pdf -m bookmarks --bookmark-level 2
 ```
 
 #### 2. Font-size Detection
@@ -99,6 +106,7 @@ python pdf_splitter.py book.pdf -m pages --pages 1-50,51-100,101-150
 |--------|-------------|---------|
 | `-m, --method` | Splitting method | `bookmarks`, `font`, `keywords`, `pages` |
 | `-o, --output` | Output directory | `-o chapters` |
+| `--bookmark-level` | Bookmark level for splitting (default: 1) | `--bookmark-level 2` |
 | `--font-size` | Minimum font size for titles | `--font-size 16` |
 | `--keywords` | Keywords to search for | `--keywords Chapter Section` |
 | `--pages` | Page ranges | `--pages 1-10,11-20` |
@@ -107,11 +115,12 @@ python pdf_splitter.py book.pdf -m pages --pages 1-50,51-100,101-150
 ### GUI Interface Features
 
 1. **File Selection**: Browse and select PDF files
-2. **Method Selection**: Choose from 4 splitting methods
-3. **Real-time Preview**: View PDF information and structure
-4. **Progress Tracking**: Monitor splitting progress
-5. **Error Handling**: Clear error messages and solutions
-6. **Output Management**: Organize generated files
+2. **Method Selection**: Choose from 4 splitting methods with configurable parameters
+3. **Bookmark Level Configuration**: Select bookmark level (1-5) for bookmark-based splitting
+4. **Real-time Preview**: View PDF information and structure
+5. **Progress Tracking**: Monitor splitting progress
+6. **Error Handling**: Clear error messages and solutions
+7. **Output Management**: Organize generated files
 
 ## 🎯 Use Cases
 
@@ -170,9 +179,13 @@ with PDFSplitter('document.pdf') as splitter:
     print(f"Total pages: {info['total_pages']}")
     print(f"Bookmarks: {info['bookmarks_count']}")
     
-    # Split using bookmarks
+    # Split using bookmarks (default level 1)
     files = splitter.split_by_bookmarks()
     print(f"Generated {len(files)} chapter files")
+    
+    # Split using specific bookmark level
+    files = splitter.split_by_bookmarks(bookmark_level=2)
+    print(f"Generated {len(files)} chapter files using level 2 bookmarks")
 
 # Advanced splitting options
 with PDFSplitter('technical_manual.pdf') as splitter:
@@ -204,7 +217,10 @@ def batch_split_pdfs(input_dir, output_dir):
         
         with PDFSplitter(str(pdf_file)) as splitter:
             chapter_output = output_path / pdf_file.stem
-            files = splitter.split_by_bookmarks(str(chapter_output))
+            # Try level 1 bookmarks first, fallback to level 2 if no results
+            files = splitter.split_by_bookmarks(str(chapter_output), bookmark_level=1)
+            if not files:
+                files = splitter.split_by_bookmarks(str(chapter_output), bookmark_level=2)
             print(f"Generated {len(files)} chapters")
 
 # Usage
@@ -258,8 +274,10 @@ Each file contains:
 ### Common Issues
 
 #### 1. No Bookmarks Found
-**Problem**: PDF doesn't have bookmark structure
-**Solution**: Use font-based or keyword detection methods
+**Problem**: PDF doesn't have bookmark structure or no bookmarks at specified level
+**Solution**: 
+- Try different bookmark levels (1-5) in GUI or use `--bookmark-level` parameter
+- Use font-based or keyword detection methods as alternatives
 
 #### 2. Encoding Errors
 **Problem**: Special characters in chapter titles

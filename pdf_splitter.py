@@ -41,9 +41,12 @@ class PDFSplitter:
         if hasattr(self, 'doc') and self.doc:
             self.doc.close()
     
-    def get_bookmarks(self) -> List[Dict]:
+    def get_bookmarks(self, bookmark_level: int = 1) -> List[Dict]:
         """
         获取PDF书签信息
+        
+        Args:
+            bookmark_level: 书签级别，默认为1（只取一级标题作为章节）
         
         Returns:
             书签列表，每个书签包含标题和页码信息
@@ -53,7 +56,7 @@ class PDFSplitter:
         
         for item in toc:
             level, title, page = item
-            if level == 1:  # 只取一级标题作为章节
+            if level == bookmark_level:  # 根据指定级别取标题作为章节
                 bookmarks.append({
                     'title': title.strip(),
                     'page': page - 1,  # PyMuPDF页码从0开始
@@ -139,19 +142,20 @@ class PDFSplitter:
         
         return chapters
     
-    def split_by_bookmarks(self, output_dir: Optional[str] = None) -> List[str]:
+    def split_by_bookmarks(self, output_dir: Optional[str] = None, bookmark_level: int = 1) -> List[str]:
         """
         根据书签切分PDF
         
         Args:
             output_dir: 输出目录，默认为原文件名_chapters
+            bookmark_level: 书签级别，默认为1（只取一级标题作为章节）
             
         Returns:
             生成的文件路径列表
         """
-        bookmarks = self.get_bookmarks()
+        bookmarks = self.get_bookmarks(bookmark_level)
         if not bookmarks:
-            print("未找到书签，无法按书签切分")
+            print(f"未找到{bookmark_level}级书签，无法按书签切分")
             return []
         
         return self._split_pdf(bookmarks, output_dir)
@@ -199,7 +203,8 @@ class PDFSplitter:
             生成的文件路径列表
         """
         if method == 'bookmarks':
-            return self.split_by_bookmarks(output_dir)
+            bookmark_level = kwargs.get('bookmark_level', 1)
+            return self.split_by_bookmarks(output_dir, bookmark_level)
         elif method == 'font':
             min_font_size = kwargs.get('min_font_size', 14)
             chapters = self.detect_chapters_by_font(min_font_size)
